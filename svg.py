@@ -27,25 +27,23 @@ def main(svgFileInput):
                 shapeAttrib.append(shape.attrib) #Correlates shape data with identity from shapeType array
 
     #Prints current shapes within the svg picture
-    for x in len(shapeType):
-        print("SHAPE TYPE: " + str(shapeType[x] + "\nSHAPE ATTRIBUTES: " + str(shapeAttrib[x]))
-    '''
+    for x in range(0, len(shapeType)):
+        print("SHAPE TYPE: " + str(shapeType[x]) + "\nSHAPE ATTRIBUTE: " + str(shapeAttrib[x]))
+        
+    """
     #Trims the "excess" xml code off of the attributes
     for x in len(shapeAttrib):
-    '''
+    """
         
-
     """
     #create local variables
     img = [] #Array to construct the SVG input to PNG file writing export
-
 
     #handle creating the png image
     for y in range(IMG_HEIGHT):
         row = ()
         for x in range(IMG_WIDTH):
             
-        
     #handle writing the  png file
     with open("image.png", img)
     """
