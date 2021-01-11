@@ -6,7 +6,9 @@ IMAGE_WIDTH = 1000
 IMAGE_HEIGHT = 500
 # FILE_NAME = "rect.svg"
 # FILE_NAME = "cir.svg"
-FILE_NAME = "el.svg"
+# FILE_NAME = "el.svg"
+FILE_NAME = "ln.svg"
+# FILE_NAME = "poly_ln.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
@@ -40,6 +42,33 @@ def draw_ellipse(cx, cy, rx, ry):
     cir_top_left_coords = (cx, cy)
     cir_bottom_right_coords = (cx + rx, cy + ry)
     draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), outline="green")
+    img.show()
+    return img
+
+
+def draw_line(x1, y1, x2, y2):
+    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    draw = ImageDraw.Draw(img)
+    # https://note.nkmk.me/en/python-pillow-imagedraw/
+    ln_top_left_coords = (x1, y1)
+    ln_bottom_right_coords = (x2, y2)
+    draw.line((ln_top_left_coords, ln_bottom_right_coords), fill="green")
+    img.show()
+    return img
+
+
+def draw_poly_line(coordinates):
+    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    draw = ImageDraw.Draw(img)
+    # https://note.nkmk.me/en/python-pillow-imagedraw/
+    for i in range(0, len(coordinates)):
+        x1, y1 = coordinates[i]
+        if i+1 != len(coordinates): 
+            x2, y2 = coordinates[i+1]
+            ln_top_left_coords = (x1, y1)
+            ln_bottom_right_coords = (x2, y2)
+            draw.line((ln_top_left_coords, ln_bottom_right_coords), fill="green")
+        #
     img.show()
     return img
 
@@ -92,11 +121,43 @@ def parse_ellipse(element):
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
+def parse_line(element):
+    # <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2" />
+    x1 = int(element.attrib.get("x1"))
+    y1 = int(element.attrib.get("y1"))
+    x2 = int(element.attrib.get("x2"))
+    y2 = int(element.attrib.get("y2"))
+    print(f"X1: {x1}, Y1: {y1}")
+    print(f"X2: {x2}, Y2: {y2}")
+
+    img = draw_line(x1, y1, x2, y2)
+    img.save(FILE_NAME.replace(".svg", ".png"))
+    return None
+    
+
+def parse_poly_line(element):
+    # <polyline points="20,20 40,25 60,40 80,120 120,140 200,180"
+    points = element.attrib.get("points")
+    coordinates = []
+    for point in points.split(" "):
+        x_str, y_str = point.split(",")
+        coordinates.append((int(x_str), int(y_str)))
+    #
+    print(f"Points: {points}")
+    print(f"Coordinates: {coordinates}")
+
+    img = draw_poly_line(coordinates)
+    img.save(FILE_NAME.replace(".svg", ".png"))
+    return None
+
 
 def detect_elm(element_tree):
     rect_element = element_tree.xpath("//rect")
     cir_element = element_tree.xpath("//circle")
     el_element = element_tree.xpath("//ellipse")
+    ln_element = element_tree.xpath("//line")
+    pol_ln_element = element_tree.xpath("//polyline")
+    path_element = element_tree.xpath("//path")
     #
     if rect_element:
         print("Element is a rectangle!")
@@ -112,6 +173,21 @@ def detect_elm(element_tree):
         print("Element is a ellipse!")
         parse_ellipse(el_element[0])
         return el_element[0]
+    #
+    elif ln_element:
+        print("Element is a line!")
+        parse_line(ln_element[0])
+        return ln_element[0]
+    #
+    elif pol_ln_element:
+        print("Element is a polyline!")
+        parse_poly_line(pol_ln_element[0])
+        return pol_ln_element[0]
+    #
+    elif path_element:
+        print("Element is a path!")
+        parse_ellipse(path_element[0])
+        return path_element[0]
     #
     else:
         print("Unknown element, not able to parse!")
