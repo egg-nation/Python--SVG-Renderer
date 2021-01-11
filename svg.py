@@ -5,7 +5,8 @@ from PIL import Image, ImageDraw
 IMAGE_WIDTH = 1000
 IMAGE_HEIGHT = 500
 # FILE_NAME = "rect.svg"
-FILE_NAME = "cir.svg"
+# FILE_NAME = "cir.svg"
+FILE_NAME = "el.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
@@ -32,7 +33,15 @@ def draw_circle(pos_x, pos_y, diameter):
     img.show()
     return img
 
-
+def draw_ellipse(cx, cy, rx, ry):
+    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    draw = ImageDraw.Draw(img)
+    # https://note.nkmk.me/en/python-pillow-imagedraw/
+    cir_top_left_coords = (cx, cy)
+    cir_bottom_right_coords = (cx + rx, cy + ry)
+    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), outline="green")
+    img.show()
+    return img
 
 
 # Parsing Rectangle - https://www.w3schools.com/graphics/svg_rect.asp
@@ -71,11 +80,23 @@ def parse_circle(element):
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
+def parse_ellipse(element):
+    cx = int(element.attrib.get("cx"))
+    cy = int(element.attrib.get("cy"))
+    rx = int(element.attrib.get("rx"))
+    ry = int(element.attrib.get("ry"))
+    print(f"CX: {cx}, CY: {cy}")
+    print(f"RX: {rx}, RY: {ry}")
+
+    img = draw_ellipse(cx, cy, rx, ry)
+    img.save(FILE_NAME.replace(".svg", ".png"))
+    return None
+
 
 def detect_elm(element_tree):
     rect_element = element_tree.xpath("//rect")
     cir_element = element_tree.xpath("//circle")
-    el_element = element_tree.xpath("//ellips")
+    el_element = element_tree.xpath("//ellipse")
     #
     if rect_element:
         print("Element is a rectangle!")
@@ -89,6 +110,7 @@ def detect_elm(element_tree):
     #
     elif el_element:
         print("Element is a ellipse!")
+        parse_ellipse(el_element[0])
         return el_element[0]
     #
     else:
