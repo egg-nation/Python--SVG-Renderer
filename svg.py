@@ -2,64 +2,113 @@ import lxml.html
 # import turtle
 from PIL import Image, ImageDraw
 
-IMAGE_WIDTH = 1000
-IMAGE_HEIGHT = 500
+IMAGE_WIDTH = 1920
+IMAGE_HEIGHT = 1080
 # FILE_NAME = "rect.svg"
 # FILE_NAME = "cir.svg"
 # FILE_NAME = "el.svg"
-FILE_NAME = "ln.svg"
-# FILE_NAME = "poly_ln.svg"
+# FILE_NAME = "ln.svg"
+FILE_NAME = "poly_ln.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
         svg_xml = input_fp.read()
     return svg_xml
 
-def draw_rect_square(pos_x, pos_y, width, height):
+def get_fill_outline(element):
+    print(f"Here")
+    style = str(element.attrib.get("style"))
+    print(f"Got style: {style}")
+    if style == "None":
+        fill = str(element.attrib.get("fill"))
+        if fill == "none":
+           fill = (255, 255, 255, 0)
+        stroke = str(element.attrib.get("stroke"))
+        if stroke == "none":
+           stroke = (255, 255, 255, 0)
+        stroke_width = int(element.attrib.get("stroke-width"))
+        print(f"Fill and stroke in style: {fill}, {stroke}, {stroke_width}")
+        return fill, stroke, stroke_width
+    else:
+        attr_dict = {pair.split(":")[0]: pair.split(":")[1] for pair in style.split(";")}
+        print(f"Style dictionary: {attr_dict}")
+        fill = attr_dict['fill']
+        if fill == "none":
+           fill = (255, 255, 255, 0)
+        stroke = attr_dict['stroke']
+        if stroke == "none":
+           stroke = (255, 255, 255, 0)
+        stroke_width = int(attr_dict['stroke-width'])
+        print(f"Fill and stroke in style: {fill}, {stroke}, {stroke_width}")
+        return fill, stroke, stroke_width
+
+def get_fill_lines(element):
+    print(f"Here")
+    style = str(element.attrib.get("style"))
+    print(f"Got style: {style}")
+    if style == "None":
+        stroke = str(element.attrib.get("stroke"))
+        if stroke == "none":
+           stroke = (255, 255, 255, 0)
+        stroke_width = int(element.attrib.get("stroke-width"))
+        print(f"Fill and stroke in style: {stroke}, {stroke_width}")
+        return stroke, stroke_width
+    else:
+        attr_dict = {pair.split(":")[0]: pair.split(":")[1] for pair in style.split(";")}
+        print(f"Style dictionary: {attr_dict}")
+        stroke = attr_dict['stroke']
+        if stroke == "none":
+           stroke = (255, 255, 255, 0)
+        stroke_width = int(attr_dict['stroke-width'])
+        print(f"Fill and stroke in style: {stroke}, {stroke_width}")
+        return stroke, stroke_width
+
+def draw_rect_square(pos_x, pos_y, width, height, fill, stroke, stroke_width):
     img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     rect_top_left_coords = (pos_x, pos_y)
     rect_bottom_right_coords = (pos_x + width, pos_y + height)
-    draw.rectangle((rect_top_left_coords, rect_bottom_right_coords), outline="green")
+    draw.rectangle((rect_top_left_coords, rect_bottom_right_coords), fill, stroke, stroke_width)
     img.show()
     return img
 
-def draw_circle(pos_x, pos_y, diameter):
+def draw_circle(pos_x, pos_y, diameter, fill, stroke, stroke_width):
     img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (pos_x, pos_y)
     cir_bottom_right_coords = (pos_x + diameter, pos_y + diameter)
-    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), outline="green")
+    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), fill, stroke, stroke_width)
     img.show()
     return img
 
-def draw_ellipse(cx, cy, rx, ry):
+def draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width):
     img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (cx, cy)
     cir_bottom_right_coords = (cx + rx, cy + ry)
-    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), outline="green")
+    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), fill, stroke, stroke_width)
     img.show()
     return img
 
 
-def draw_line(x1, y1, x2, y2):
+def draw_line(x1, y1, x2, y2, stroke, stroke_width):
     img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     ln_top_left_coords = (x1, y1)
     ln_bottom_right_coords = (x2, y2)
-    draw.line((ln_top_left_coords, ln_bottom_right_coords), fill="green")
+    draw.line((ln_top_left_coords, ln_bottom_right_coords), stroke, stroke_width)
     img.show()
     return img
 
 
-def draw_poly_line(coordinates):
+def draw_poly_line(coordinates, fill, stroke, stroke_width):
     img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
     draw = ImageDraw.Draw(img)
+
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     for i in range(0, len(coordinates)):
         x1, y1 = coordinates[i]
@@ -67,7 +116,7 @@ def draw_poly_line(coordinates):
             x2, y2 = coordinates[i+1]
             ln_top_left_coords = (x1, y1)
             ln_bottom_right_coords = (x2, y2)
-            draw.line((ln_top_left_coords, ln_bottom_right_coords), fill="green")
+            draw.line((ln_top_left_coords, ln_bottom_right_coords), stroke, stroke_width)
         #
     img.show()
     return img
@@ -89,11 +138,15 @@ def parse_rectangle(element):
     rect_width = int(element.attrib.get("width"))
     rect_height = int(element.attrib.get("height"))
 
+    fill, stroke, stroke_width = get_fill_outline(element)
+
+    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
+
     print(f"X: {rect_x}, Y: {rect_y}")
     print(f"RX: {rect_rx}, RY: {rect_ry}")
     print(f"Width: {rect_width}, Height: {rect_height}")
 
-    img = draw_rect_square(rect_x, rect_y, rect_width, rect_height)
+    img = draw_rect_square(rect_x, rect_y, rect_width, rect_height, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
@@ -102,10 +155,15 @@ def parse_circle(element):
     cir_y = int(element.attrib.get("cy"))
     radius = int(element.attrib.get("r"))
     diameter = radius * 2
+
+    fill, stroke, stroke_width = get_fill_outline(element)
+
+    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
+
     print(f"CX: {cir_x}, CY: {cir_y}")
     print(f"Radius: {radius}")
 
-    img = draw_circle(cir_x, cir_y, diameter)
+    img = draw_circle(cir_x, cir_y, diameter, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
@@ -114,10 +172,15 @@ def parse_ellipse(element):
     cy = int(element.attrib.get("cy"))
     rx = int(element.attrib.get("rx"))
     ry = int(element.attrib.get("ry"))
+
+    fill, stroke, stroke_width = get_fill_outline(element)
+
+    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
+
     print(f"CX: {cx}, CY: {cy}")
     print(f"RX: {rx}, RY: {ry}")
 
-    img = draw_ellipse(cx, cy, rx, ry)
+    img = draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
@@ -127,10 +190,15 @@ def parse_line(element):
     y1 = int(element.attrib.get("y1"))
     x2 = int(element.attrib.get("x2"))
     y2 = int(element.attrib.get("y2"))
+
+    stroke, stroke_width = get_fill_lines(element)
+
+    print(f"Stroke color: {stroke}, Stroke width: {stroke_width}")
+
     print(f"X1: {x1}, Y1: {y1}")
     print(f"X2: {x2}, Y2: {y2}")
 
-    img = draw_line(x1, y1, x2, y2)
+    img = draw_line(x1, y1, x2, y2, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
     
@@ -146,7 +214,11 @@ def parse_poly_line(element):
     print(f"Points: {points}")
     print(f"Coordinates: {coordinates}")
 
-    img = draw_poly_line(coordinates)
+    fill, stroke, stroke_width = get_fill_outline(element)
+
+    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
+
+    img = draw_poly_line(coordinates, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
