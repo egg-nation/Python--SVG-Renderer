@@ -1,4 +1,5 @@
 import lxml.html
+import sys
 # import turtle
 from PIL import Image, ImageDraw
 
@@ -278,7 +279,10 @@ def parse_svg(svg_tree, element):
         detect_elm(img, child)
     return None
 
-svg_xml = open_svg(FILE_NAME)
+# GIVEN_FILE = input('Enter the name of the SVG file that you want to parse: ')
+GIVEN_FILE = sys.argv[1]
+
+svg_xml = open_svg(GIVEN_FILE)
 svg_tree = lxml.html.fromstring(svg_xml)
 svg_element = svg_tree.xpath("//svg")
 if svg_element:
