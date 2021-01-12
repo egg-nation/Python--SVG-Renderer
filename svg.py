@@ -1,43 +1,16 @@
-import lxml.html
-# import turtle
-from picasso import Picasso
 import box
-from pprint import pprint
+import lxml.html
 import sys
-
-# Get height and width from svg file.
-# Check if bg needs to be transparent.
-# IMAGE_WIDTH = 1000
-# IMAGE_HEIGHT = 500
-# FILE_NAME = "rect.svg"
-# FILE_NAME = "cir.svg"
-# FILE_NAME = "el.svg"
-# FILE_NAME = "ln.svg"
-# FILE_NAME = "poly_ln.svg"
-# FILE_NAME = "path1.svg"
-# FILE_NAME = "combined.svg"
-FILE_NAME = "group.svg"
-
-
+from picasso import Picasso
+from pprint import pprint
 
 FILE_NAME = sys.argv[-1]
 print(FILE_NAME)
-# FILE_NAME = "group.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
         svg_xml = input_fp.read()
     return svg_xml
-
-
-
-
-# Parsing Rectangle - https://www.w3schools.com/graphics/svg_rect.asp
-# Rectangle xpath selector = "//rect"
-# Attributes to check:
-#   width, height
-#   x, y position
-#   rx, ry
 
 def get_attributes_data(element):
     data = box.Box({})
@@ -54,8 +27,6 @@ def get_attributes_data(element):
     pprint(dict(data))
     return data
 
-
-
 def parse_css_string(css_string, styles):
     props = css_string.split(";")
     for prop in props:
@@ -68,6 +39,7 @@ def get_style_of_elm(element):
     css_string = element.attrib.get("style")
     if css_string:
         styles = parse_css_string(css_string, styles)
+    #
     return styles
 
 def get_styles(data):
@@ -75,8 +47,16 @@ def get_styles(data):
     styles = get_style_of_elm(data.element)
     if not styles:
         parent_element = data.element.getparent()
+        print(f"This is parent")
         if parent_element.tag == "g":
             styles = get_style_of_elm(parent_element)
+            # 
+            if not styles.get("stroke"):
+                styles.stroke = parent_element.attrib.get("stroke")
+            if not styles.get("fill"):
+                styles.fill = parent_element.attrib.get("fill")
+            if not styles.get("stroke-width"):
+                styles["stroke-width"] = parent_element.attrib.get("stroke-width")
     #
     # set default styles
     if not styles.get("stroke"):
@@ -98,24 +78,6 @@ def get_styles(data):
     data["stroke-width"] = int(data["stroke-width"])
     return data
 
-# def parse_css(data):
-#     css_string = data.get("style")
-#     styles = get_styles(css_string)
-#     #
-#     if not data.get("stroke"):
-#         data.stroke = styles.stroke
-#     if not data.get("fill"):
-#         data.fill = styles.fill
-#     if not data.get("stroke-width"):
-#         data["stroke-width"] = int(styles["stroke-width"])
-#     # 
-#     # convert width to int
-#     data["stroke-width"] = int(data["stroke-width"])
-#     return data
-
-
-    
-
 
 def get_css(data):
     inline_css_str = data.get("style")
@@ -124,10 +86,6 @@ def get_css(data):
         group_element = data.element.parent("//g")
         if group_element:
             group_styles
-
-# Check for inline style
-    #  if present get styles from that
-    # if not check if it has parent element
 
 
 
