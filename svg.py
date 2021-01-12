@@ -16,11 +16,13 @@ import sys
 # FILE_NAME = "poly_ln.svg"
 # FILE_NAME = "path1.svg"
 # FILE_NAME = "combined.svg"
+FILE_NAME = "group.svg"
 
 
 
 FILE_NAME = sys.argv[-1]
 print(FILE_NAME)
+# FILE_NAME = "group.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
@@ -40,6 +42,7 @@ def open_svg(file):
 def get_attributes_data(element):
     data = box.Box({})
     data.tag = element.tag
+    data.element = element
     for k, v in element.attrib.items():
         print(k,v)
         if v.isnumeric():
@@ -47,39 +50,86 @@ def get_attributes_data(element):
         else:
             data[k] = v
     #
-    data = parse_css(data)
+    data = get_styles(data)
     pprint(dict(data))
     return data
 
-def parse_inline_styles(css_string):
-    # style="stroke:rgb(255,0,0);stroke-width:2"
-    styles = box.Box({
-        # default styles
-        "stroke": "rgb(255,0,0)",
-        "fill": "none",
-        "stroke-width": "5"
-    })
-    if css_string:
-        props = css_string.split(";")
-        for prop in props:
-            prop_name, prop_value = prop.split(":")
-            styles[prop_name] = prop_value
+
+
+def parse_css_string(css_string, styles):
+    props = css_string.split(";")
+    for prop in props:
+        prop_name, prop_value = prop.split(":")
+        styles[prop_name] = prop_value    
     return styles
 
-def parse_css(data):
-    css_string = data.get("style")
-    styles = parse_inline_styles(css_string)
+def get_style_of_elm(element):
+    styles = box.Box({})
+    css_string = element.attrib.get("style")
+    if css_string:
+        styles = parse_css_string(css_string, styles)
+    return styles
+
+def get_styles(data):
+    # 
+    styles = get_style_of_elm(data.element)
+    if not styles:
+        parent_element = data.element.getparent()
+        if parent_element.tag == "g":
+            styles = get_style_of_elm(parent_element)
     #
+    # set default styles
+    if not styles.get("stroke"):
+        styles.stroke = "rgb(255,0,0)"
+    if not styles.get("fill"):
+        styles.fill = None
+    if not styles.get("stroke-width"):
+        styles["stroke-width"] = "5"
+    #
+    # Set styles from inline css if no attributes present
     if not data.get("stroke"):
         data.stroke = styles.stroke
     if not data.get("fill"):
         data.fill = styles.fill
     if not data.get("stroke-width"):
-        data["stroke-width"] = int(styles["stroke-width"])
+        data["stroke-width"] = styles["stroke-width"]
     # 
     # convert width to int
     data["stroke-width"] = int(data["stroke-width"])
     return data
+
+# def parse_css(data):
+#     css_string = data.get("style")
+#     styles = get_styles(css_string)
+#     #
+#     if not data.get("stroke"):
+#         data.stroke = styles.stroke
+#     if not data.get("fill"):
+#         data.fill = styles.fill
+#     if not data.get("stroke-width"):
+#         data["stroke-width"] = int(styles["stroke-width"])
+#     # 
+#     # convert width to int
+#     data["stroke-width"] = int(data["stroke-width"])
+#     return data
+
+
+    
+
+
+def get_css(data):
+    inline_css_str = data.get("style")
+    if not inline_css_str:
+        # Check for group style
+        group_element = data.element.parent("//g")
+        if group_element:
+            group_styles
+
+# Check for inline style
+    #  if present get styles from that
+    # if not check if it has parent element
+
+
 
 def parse_rectangle(element):
     data = get_attributes_data(element)
@@ -117,7 +167,10 @@ def parse_poly_line(element):
     return data
 
 
-def parse_path(element, draw_obj):
+def parse_path(element):
+    data = get_attributes_data(element)
+    coordinates = []
+    #     
     path_data = element.attrib.get("d")
     data_items = path_data.split(" ")
     initial_x, cursor_x = 0, 0
@@ -133,16 +186,15 @@ def parse_path(element, draw_obj):
                 # Move to
                 initial_x = int(item.strip("M"))
                 initial_y = int(data_items.pop(0))
+                coordinates.append((initial_x, initial_y))
                 # # 
-                # initial_x = cursor_x
-                # initial_y = cursor_y
             elif "L" in item:
                 cursor_x = int(item.strip("L"))
                 cursor_y = int(data_items.pop(0))
-                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
+                coordinates.append((cursor_x, cursor_y))
             elif "Z" in item:
                 # Close Path, draw line to initial point
-                draw_obj = draw_line(cursor_x, cursor_y, initial_x, initial_y, draw_obj)
+                coordinates.append((initial_x, initial_y))
         #
         else:
             # M150
@@ -150,22 +202,20 @@ def parse_path(element, draw_obj):
                 # Move to
                 initial_x = int(data_items.pop(0))
                 initial_y = int(data_items.pop(0))
+                coordinates.append((initial_x, initial_y))
                 # # 
-                # initial_x = cursor_x
-                # initial_y = cursor_y
             elif "L" == item:
                 cursor_x = int(data_items.pop(0))
                 cursor_y = int(data_items.pop(0))
-                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
+                coordinates.append((cursor_x, cursor_y))                
             elif "Z" == item:
                 # Close Path, draw line to initial point
-                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
-                # draw_obj = draw_line(cursor_x, cursor_y, initial_x, initial_y, draw_obj)
+                coordinates.append((initial_x, initial_y))
 
     print(f"Path Data: {path_data}")
-    # draw_obj = draw_ellipse(cx, cy, rx, ry, draw_obj)
-    # img.save(FILE_NAME.replace(".svg", ".png"))
-    return draw_obj
+    print(coordinates)
+    data.coordinates = coordinates
+    return data
 
 
 def detect_elm(svg_tree):
@@ -180,7 +230,8 @@ def detect_elm(svg_tree):
     print(f"Image Width: {img_width} & Image Height: {img_height}")
     picasso_obj = Picasso(img_width, img_height)
     #
-    svg_elements = svg_tree.getchildren()
+    # svg_elements = svg_tree.getchildren()
+    svg_elements = svg_tree.xpath(".//*[not(name()='g')]")
     for element in svg_elements:
         if element.tag == "rect":
             print("Element is a rectangle!")
@@ -208,7 +259,8 @@ def detect_elm(svg_tree):
         #
         elif element.tag == "path":
             print("Element is a path!")
-            draw_obj = parse_path(element)
+            data = parse_path(element)
+            picasso_obj.draw_poly_line(data)
         #
         else:
             print("Unknown element, not able to parse!")
