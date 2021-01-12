@@ -16,7 +16,7 @@ def open_svg(file):
     return svg_xml
 
 def get_fill_outline(element):
-    print(f"Here")
+    print(f"Analysing style attributes")
     style = str(element.attrib.get("style"))
     print(f"Got style: {style}")
     if style == "None":
@@ -43,7 +43,7 @@ def get_fill_outline(element):
         return fill, stroke, stroke_width
 
 def get_fill_lines(element):
-    print(f"Here")
+    print(f"Analysing style attributes")
     style = str(element.attrib.get("style"))
     print(f"Got style: {style}")
     if style == "None":
@@ -64,7 +64,7 @@ def get_fill_lines(element):
         return stroke, stroke_width
 
 def draw_rect_square(pos_x, pos_y, width, height, fill, stroke, stroke_width):
-    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     rect_top_left_coords = (pos_x, pos_y)
@@ -74,7 +74,7 @@ def draw_rect_square(pos_x, pos_y, width, height, fill, stroke, stroke_width):
     return img
 
 def draw_circle(pos_x, pos_y, diameter, fill, stroke, stroke_width):
-    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (pos_x, pos_y)
@@ -84,7 +84,7 @@ def draw_circle(pos_x, pos_y, diameter, fill, stroke, stroke_width):
     return img
 
 def draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width):
-    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (cx, cy)
@@ -95,7 +95,7 @@ def draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width):
 
 
 def draw_line(x1, y1, x2, y2, stroke, stroke_width):
-    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     ln_top_left_coords = (x1, y1)
@@ -106,7 +106,7 @@ def draw_line(x1, y1, x2, y2, stroke, stroke_width):
 
 
 def draw_poly_line(coordinates, fill, stroke, stroke_width):
-    img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT))
+    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
     draw = ImageDraw.Draw(img)
 
     # https://note.nkmk.me/en/python-pillow-imagedraw/
@@ -147,7 +147,7 @@ def parse_rectangle(element):
     print(f"Width: {rect_width}, Height: {rect_height}")
 
     img = draw_rect_square(rect_x, rect_y, rect_width, rect_height, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"))
+    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
 def parse_circle(element):
@@ -164,7 +164,7 @@ def parse_circle(element):
     print(f"Radius: {radius}")
 
     img = draw_circle(cir_x, cir_y, diameter, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"))
+    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
 def parse_ellipse(element):
@@ -181,7 +181,7 @@ def parse_ellipse(element):
     print(f"RX: {rx}, RY: {ry}")
 
     img = draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"))
+    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
 def parse_line(element):
@@ -199,7 +199,7 @@ def parse_line(element):
     print(f"X2: {x2}, Y2: {y2}")
 
     img = draw_line(x1, y1, x2, y2, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"))
+    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
     
 
@@ -219,7 +219,7 @@ def parse_poly_line(element):
     print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
 
     img = draw_poly_line(coordinates, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"))
+    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
 
