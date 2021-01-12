@@ -1,0 +1,6 @@
+<svg height="400" width="450">
+  <circle id="pointA" cx="10" cy="35" r="8" fill="red" stroke="pink" stroke-width="2"/>
+  <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2" />
+  <circle id="pointB" cx="25" cy="50" r="8" fill="yellow" stroke="pink" stroke-width="2"/>
+  <circle id="pointC" cx="40" cy="35" r="8" fill="black" stroke="pink" stroke-width="2"/>
+</svg>

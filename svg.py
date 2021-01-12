@@ -4,11 +4,12 @@ from PIL import Image, ImageDraw
 
 IMAGE_WIDTH = 1920
 IMAGE_HEIGHT = 1080
-# FILE_NAME = "rect.svg"
+FILE_NAME = "rect.svg"
 # FILE_NAME = "cir.svg"
 # FILE_NAME = "el.svg"
 # FILE_NAME = "ln.svg"
-FILE_NAME = "poly_ln.svg"
+# FILE_NAME = "combined.svg"
+# FILE_NAME = "poly_ln.svg"
 
 def open_svg(file):
     with open(file, "r") as input_fp:
@@ -63,8 +64,7 @@ def get_fill_lines(element):
         print(f"Fill and stroke in style: {stroke}, {stroke_width}")
         return stroke, stroke_width
 
-def draw_rect_square(pos_x, pos_y, width, height, fill, stroke, stroke_width):
-    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+def draw_rect_square(img, pos_x, pos_y, width, height, fill, stroke, stroke_width):
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     rect_top_left_coords = (pos_x, pos_y)
@@ -73,8 +73,7 @@ def draw_rect_square(pos_x, pos_y, width, height, fill, stroke, stroke_width):
     img.show()
     return img
 
-def draw_circle(pos_x, pos_y, diameter, fill, stroke, stroke_width):
-    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+def draw_circle(img, pos_x, pos_y, diameter, fill, stroke, stroke_width):
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (pos_x, pos_y)
@@ -83,8 +82,7 @@ def draw_circle(pos_x, pos_y, diameter, fill, stroke, stroke_width):
     img.show()
     return img
 
-def draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width):
-    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+def draw_ellipse(img, cx, cy, rx, ry, fill, stroke, stroke_width):
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     cir_top_left_coords = (cx, cy)
@@ -94,8 +92,7 @@ def draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width):
     return img
 
 
-def draw_line(x1, y1, x2, y2, stroke, stroke_width):
-    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+def draw_line(img, x1, y1, x2, y2, stroke, stroke_width):
     draw = ImageDraw.Draw(img)
     # https://note.nkmk.me/en/python-pillow-imagedraw/
     ln_top_left_coords = (x1, y1)
@@ -105,8 +102,7 @@ def draw_line(x1, y1, x2, y2, stroke, stroke_width):
     return img
 
 
-def draw_poly_line(coordinates, fill, stroke, stroke_width):
-    img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+def draw_poly_line(img, coordinates, fill, stroke, stroke_width):
     draw = ImageDraw.Draw(img)
 
     # https://note.nkmk.me/en/python-pillow-imagedraw/
@@ -130,7 +126,7 @@ def draw_poly_line(coordinates, fill, stroke, stroke_width):
 #   rx, ry
 
 
-def parse_rectangle(element):
+def parse_rectangle(img, element):
     rect_x = int(element.attrib.get("x"))
     rect_y = int(element.attrib.get("y"))
     rect_rx = element.attrib.get("rx")
@@ -146,11 +142,11 @@ def parse_rectangle(element):
     print(f"RX: {rect_rx}, RY: {rect_ry}")
     print(f"Width: {rect_width}, Height: {rect_height}")
 
-    img = draw_rect_square(rect_x, rect_y, rect_width, rect_height, fill, stroke, stroke_width)
+    img = draw_rect_square(img, rect_x, rect_y, rect_width, rect_height, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
-def parse_circle(element):
+def parse_circle(img, element):
     cir_x = int(element.attrib.get("cx"))
     cir_y = int(element.attrib.get("cy"))
     radius = int(element.attrib.get("r"))
@@ -163,11 +159,11 @@ def parse_circle(element):
     print(f"CX: {cir_x}, CY: {cir_y}")
     print(f"Radius: {radius}")
 
-    img = draw_circle(cir_x, cir_y, diameter, fill, stroke, stroke_width)
+    img = draw_circle(img, cir_x, cir_y, diameter, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
-def parse_ellipse(element):
+def parse_ellipse(img, element):
     cx = int(element.attrib.get("cx"))
     cy = int(element.attrib.get("cy"))
     rx = int(element.attrib.get("rx"))
@@ -180,11 +176,11 @@ def parse_ellipse(element):
     print(f"CX: {cx}, CY: {cy}")
     print(f"RX: {rx}, RY: {ry}")
 
-    img = draw_ellipse(cx, cy, rx, ry, fill, stroke, stroke_width)
+    img = draw_ellipse(img, cx, cy, rx, ry, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
-def parse_line(element):
+def parse_line(img, element):
     # <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2" />
     x1 = int(element.attrib.get("x1"))
     y1 = int(element.attrib.get("y1"))
@@ -198,12 +194,12 @@ def parse_line(element):
     print(f"X1: {x1}, Y1: {y1}")
     print(f"X2: {x2}, Y2: {y2}")
 
-    img = draw_line(x1, y1, x2, y2, stroke, stroke_width)
+    img = draw_line(img, x1, y1, x2, y2, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
     
 
-def parse_poly_line(element):
+def parse_poly_line(img, element):
     # <polyline points="20,20 40,25 60,40 80,120 120,140 200,180"
     points = element.attrib.get("points")
     coordinates = []
@@ -218,12 +214,11 @@ def parse_poly_line(element):
 
     print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
 
-    img = draw_poly_line(coordinates, fill, stroke, stroke_width)
+    img = draw_poly_line(img, coordinates, fill, stroke, stroke_width)
     img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
     return None
 
-
-def detect_elm(element_tree):
+def detect_elm(img, element_tree):
     rect_element = element_tree.xpath("//rect")
     cir_element = element_tree.xpath("//circle")
     el_element = element_tree.xpath("//ellipse")
@@ -233,42 +228,62 @@ def detect_elm(element_tree):
     #
     if rect_element:
         print("Element is a rectangle!")
-        parse_rectangle(rect_element[0])
+        parse_rectangle(img, rect_element[0])
         return rect_element[0]
     #
     elif cir_element:
         print("Element is a circle!")
-        parse_circle(cir_element[0])
+        parse_circle(img, cir_element[0])
         return cir_element[0]
     #
     elif el_element:
         print("Element is a ellipse!")
-        parse_ellipse(el_element[0])
+        parse_ellipse(img, el_element[0])
         return el_element[0]
     #
     elif ln_element:
         print("Element is a line!")
-        parse_line(ln_element[0])
+        parse_line(img, ln_element[0])
         return ln_element[0]
     #
     elif pol_ln_element:
         print("Element is a polyline!")
-        parse_poly_line(pol_ln_element[0])
+        parse_poly_line(img, pol_ln_element[0])
         return pol_ln_element[0]
     #
     elif path_element:
         print("Element is a path!")
-        parse_ellipse(path_element[0])
+        parse_ellipse(img, path_element[0])
         return path_element[0]
     #
     else:
         print("Unknown element, not able to parse!")
     return None
         
+def parse_svg(svg_tree, element):
+
+    width = int(element.attrib.get("width"))
+    height = int(element.attrib.get("height"))
+
+    print(f"Width: {width}, Height: {height}")
+
+    if width and height:
+        img = Image.new("RGBA", (width, height), (255, 255, 255, 0))
+    else:
+        img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
+
+    # EFF THIS SHIT WHY THE HECK AIN T YOU WORKING I M TIRED FML... MOST LIKELY SOME STUPID CRAP BUT WELL
+    for child in svg_tree:
+        print(child.tag, child.attrib)
+        detect_elm(img, child)
+    return None
 
 svg_xml = open_svg(FILE_NAME)
 svg_tree = lxml.html.fromstring(svg_xml)
-detect_elm(svg_tree)
+svg_element = svg_tree.xpath("//svg")
+if svg_element:
+    print("Found SVG tag!")
+    parse_svg(svg_tree, svg_element[0])
 
 # Move turtle to specific coordinates (x,y)
 # Assuming top left as (0,0)
