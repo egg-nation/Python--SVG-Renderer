@@ -18,14 +18,16 @@ import sys
 # FILE_NAME = "combined.svg"
 
 
+
 FILE_NAME = sys.argv[-1]
 print(FILE_NAME)
-
 
 def open_svg(file):
     with open(file, "r") as input_fp:
         svg_xml = input_fp.read()
     return svg_xml
+
+
 
 
 # Parsing Rectangle - https://www.w3schools.com/graphics/svg_rect.asp
@@ -39,7 +41,7 @@ def get_attributes_data(element):
     data = box.Box({})
     data.tag = element.tag
     for k, v in element.attrib.items():
-        print(k, v)
+        print(k,v)
         if v.isnumeric():
             data[k] = int(v)
         else:
@@ -48,7 +50,6 @@ def get_attributes_data(element):
     data = parse_css(data)
     pprint(dict(data))
     return data
-
 
 def parse_inline_styles(css_string):
     # style="stroke:rgb(255,0,0);stroke-width:2"
@@ -65,7 +66,6 @@ def parse_inline_styles(css_string):
             styles[prop_name] = prop_value
     return styles
 
-
 def parse_css(data):
     css_string = data.get("style")
     styles = parse_inline_styles(css_string)
@@ -76,16 +76,14 @@ def parse_css(data):
         data.fill = styles.fill
     if not data.get("stroke-width"):
         data["stroke-width"] = int(styles["stroke-width"])
-    #
+    # 
     # convert width to int
     data["stroke-width"] = int(data["stroke-width"])
     return data
 
-
 def parse_rectangle(element):
     data = get_attributes_data(element)
-    return data
-
+    return data 
 
 def parse_circle(element):
     data = get_attributes_data(element)
@@ -94,16 +92,14 @@ def parse_circle(element):
     data.rx, data.ry = diameter, diameter
     return data
 
-
 def parse_ellipse(element):
     data = get_attributes_data(element)
     return data
 
-
 def parse_line(element):
     data = get_attributes_data(element)
     return data
-
+    
 
 def parse_poly_line(element):
     data = get_attributes_data(element)
@@ -137,7 +133,7 @@ def parse_path(element, draw_obj):
                 # Move to
                 initial_x = int(item.strip("M"))
                 initial_y = int(data_items.pop(0))
-                # #
+                # # 
                 # initial_x = cursor_x
                 # initial_y = cursor_y
             elif "L" in item:
@@ -154,7 +150,7 @@ def parse_path(element, draw_obj):
                 # Move to
                 initial_x = int(data_items.pop(0))
                 initial_y = int(data_items.pop(0))
-                # #
+                # # 
                 # initial_x = cursor_x
                 # initial_y = cursor_y
             elif "L" == item:
@@ -220,7 +216,7 @@ def detect_elm(svg_tree):
     picasso_obj.img_obj.show()
     picasso_obj.img_obj.save(FILE_NAME.replace(".svg", ".png"))
     return None
-
+        
 
 svg_xml = open_svg(FILE_NAME)
 svg_tree = lxml.html.fromstring(svg_xml)

@@ -42,6 +42,9 @@ class Picasso(object):
         coordinates = data.coordinates
         for i in range(0, len(coordinates)):
             ln_data = box.Box({})
+            ln_data.stroke = data.stroke
+            ln_data.fill = data.fill
+            ln_data["stroke-width"] = data["stroke-width"]
             ln_data.x1, ln_data.y1 = coordinates[i]
             if i+1 != len(coordinates): 
                 ln_data.x2, ln_data.y2 = coordinates[i+1]
