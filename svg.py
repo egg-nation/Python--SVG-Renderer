@@ -1,122 +1,31 @@
 import lxml.html
-import sys
 # import turtle
-from PIL import Image, ImageDraw
+from picasso import Picasso
+import box
+from pprint import pprint
+import sys
 
-IMAGE_WIDTH = 1920
-IMAGE_HEIGHT = 1080
-FILE_NAME = "rect.svg"
+# Get height and width from svg file.
+# Check if bg needs to be transparent.
+# IMAGE_WIDTH = 1000
+# IMAGE_HEIGHT = 500
+# FILE_NAME = "rect.svg"
 # FILE_NAME = "cir.svg"
 # FILE_NAME = "el.svg"
 # FILE_NAME = "ln.svg"
-# FILE_NAME = "combined.svg"
 # FILE_NAME = "poly_ln.svg"
+# FILE_NAME = "path1.svg"
+# FILE_NAME = "combined.svg"
+
+
+FILE_NAME = sys.argv[-1]
+print(FILE_NAME)
+
 
 def open_svg(file):
     with open(file, "r") as input_fp:
         svg_xml = input_fp.read()
     return svg_xml
-
-def get_fill_outline(element):
-    print(f"Analysing style attributes")
-    style = str(element.attrib.get("style"))
-    print(f"Got style: {style}")
-    if style == "None":
-        fill = str(element.attrib.get("fill"))
-        if fill == "none":
-           fill = (255, 255, 255, 0)
-        stroke = str(element.attrib.get("stroke"))
-        if stroke == "none":
-           stroke = (255, 255, 255, 0)
-        stroke_width = int(element.attrib.get("stroke-width"))
-        print(f"Fill and stroke in style: {fill}, {stroke}, {stroke_width}")
-        return fill, stroke, stroke_width
-    else:
-        attr_dict = {pair.split(":")[0]: pair.split(":")[1] for pair in style.split(";")}
-        print(f"Style dictionary: {attr_dict}")
-        fill = attr_dict['fill']
-        if fill == "none":
-           fill = (255, 255, 255, 0)
-        stroke = attr_dict['stroke']
-        if stroke == "none":
-           stroke = (255, 255, 255, 0)
-        stroke_width = int(attr_dict['stroke-width'])
-        print(f"Fill and stroke in style: {fill}, {stroke}, {stroke_width}")
-        return fill, stroke, stroke_width
-
-def get_fill_lines(element):
-    print(f"Analysing style attributes")
-    style = str(element.attrib.get("style"))
-    print(f"Got style: {style}")
-    if style == "None":
-        stroke = str(element.attrib.get("stroke"))
-        if stroke == "none":
-           stroke = (255, 255, 255, 0)
-        stroke_width = int(element.attrib.get("stroke-width"))
-        print(f"Fill and stroke in style: {stroke}, {stroke_width}")
-        return stroke, stroke_width
-    else:
-        attr_dict = {pair.split(":")[0]: pair.split(":")[1] for pair in style.split(";")}
-        print(f"Style dictionary: {attr_dict}")
-        stroke = attr_dict['stroke']
-        if stroke == "none":
-           stroke = (255, 255, 255, 0)
-        stroke_width = int(attr_dict['stroke-width'])
-        print(f"Fill and stroke in style: {stroke}, {stroke_width}")
-        return stroke, stroke_width
-
-def draw_rect_square(img, pos_x, pos_y, width, height, fill, stroke, stroke_width):
-    draw = ImageDraw.Draw(img)
-    # https://note.nkmk.me/en/python-pillow-imagedraw/
-    rect_top_left_coords = (pos_x, pos_y)
-    rect_bottom_right_coords = (pos_x + width, pos_y + height)
-    draw.rectangle((rect_top_left_coords, rect_bottom_right_coords), fill, stroke, stroke_width)
-    img.show()
-    return img
-
-def draw_circle(img, pos_x, pos_y, diameter, fill, stroke, stroke_width):
-    draw = ImageDraw.Draw(img)
-    # https://note.nkmk.me/en/python-pillow-imagedraw/
-    cir_top_left_coords = (pos_x, pos_y)
-    cir_bottom_right_coords = (pos_x + diameter, pos_y + diameter)
-    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), fill, stroke, stroke_width)
-    img.show()
-    return img
-
-def draw_ellipse(img, cx, cy, rx, ry, fill, stroke, stroke_width):
-    draw = ImageDraw.Draw(img)
-    # https://note.nkmk.me/en/python-pillow-imagedraw/
-    cir_top_left_coords = (cx, cy)
-    cir_bottom_right_coords = (cx + rx, cy + ry)
-    draw.ellipse((cir_top_left_coords, cir_bottom_right_coords), fill, stroke, stroke_width)
-    img.show()
-    return img
-
-
-def draw_line(img, x1, y1, x2, y2, stroke, stroke_width):
-    draw = ImageDraw.Draw(img)
-    # https://note.nkmk.me/en/python-pillow-imagedraw/
-    ln_top_left_coords = (x1, y1)
-    ln_bottom_right_coords = (x2, y2)
-    draw.line((ln_top_left_coords, ln_bottom_right_coords), stroke, stroke_width)
-    img.show()
-    return img
-
-
-def draw_poly_line(img, coordinates, fill, stroke, stroke_width):
-    draw = ImageDraw.Draw(img)
-
-    # https://note.nkmk.me/en/python-pillow-imagedraw/
-    for i in range(0, len(coordinates)):
-        x1, y1 = coordinates[i]
-        if i+1 != len(coordinates): 
-            x2, y2 = coordinates[i+1]
-            ln_top_left_coords = (x1, y1)
-            ln_bottom_right_coords = (x2, y2)
-            draw.line((ln_top_left_coords, ln_bottom_right_coords), stroke, stroke_width)
-        #
-    img.show()
-    return img
 
 
 # Parsing Rectangle - https://www.w3schools.com/graphics/svg_rect.asp
@@ -126,83 +35,80 @@ def draw_poly_line(img, coordinates, fill, stroke, stroke_width):
 #   x, y position
 #   rx, ry
 
+def get_attributes_data(element):
+    data = box.Box({})
+    data.tag = element.tag
+    for k, v in element.attrib.items():
+        print(k, v)
+        if v.isnumeric():
+            data[k] = int(v)
+        else:
+            data[k] = v
+    #
+    data = parse_css(data)
+    pprint(dict(data))
+    return data
 
-def parse_rectangle(img, element):
-    rect_x = int(element.attrib.get("x"))
-    rect_y = int(element.attrib.get("y"))
-    rect_rx = element.attrib.get("rx")
-    rect_ry = element.attrib.get("ry")
-    rect_width = int(element.attrib.get("width"))
-    rect_height = int(element.attrib.get("height"))
 
-    fill, stroke, stroke_width = get_fill_outline(element)
+def parse_inline_styles(css_string):
+    # style="stroke:rgb(255,0,0);stroke-width:2"
+    styles = box.Box({
+        # default styles
+        "stroke": "rgb(255,0,0)",
+        "fill": "none",
+        "stroke-width": "5"
+    })
+    if css_string:
+        props = css_string.split(";")
+        for prop in props:
+            prop_name, prop_value = prop.split(":")
+            styles[prop_name] = prop_value
+    return styles
 
-    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
 
-    print(f"X: {rect_x}, Y: {rect_y}")
-    print(f"RX: {rect_rx}, RY: {rect_ry}")
-    print(f"Width: {rect_width}, Height: {rect_height}")
+def parse_css(data):
+    css_string = data.get("style")
+    styles = parse_inline_styles(css_string)
+    #
+    if not data.get("stroke"):
+        data.stroke = styles.stroke
+    if not data.get("fill"):
+        data.fill = styles.fill
+    if not data.get("stroke-width"):
+        data["stroke-width"] = int(styles["stroke-width"])
+    #
+    # convert width to int
+    data["stroke-width"] = int(data["stroke-width"])
+    return data
 
-    img = draw_rect_square(img, rect_x, rect_y, rect_width, rect_height, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
-    return None
 
-def parse_circle(img, element):
-    cir_x = int(element.attrib.get("cx"))
-    cir_y = int(element.attrib.get("cy"))
-    radius = int(element.attrib.get("r"))
-    diameter = radius * 2
+def parse_rectangle(element):
+    data = get_attributes_data(element)
+    return data
 
-    fill, stroke, stroke_width = get_fill_outline(element)
 
-    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
+def parse_circle(element):
+    data = get_attributes_data(element)
+    diameter = data.r * 2
+    # For circle rx & ry is diamenter
+    data.rx, data.ry = diameter, diameter
+    return data
 
-    print(f"CX: {cir_x}, CY: {cir_y}")
-    print(f"Radius: {radius}")
 
-    img = draw_circle(img, cir_x, cir_y, diameter, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
-    return None
+def parse_ellipse(element):
+    data = get_attributes_data(element)
+    return data
 
-def parse_ellipse(img, element):
-    cx = int(element.attrib.get("cx"))
-    cy = int(element.attrib.get("cy"))
-    rx = int(element.attrib.get("rx"))
-    ry = int(element.attrib.get("ry"))
 
-    fill, stroke, stroke_width = get_fill_outline(element)
+def parse_line(element):
+    data = get_attributes_data(element)
+    return data
 
-    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
 
-    print(f"CX: {cx}, CY: {cy}")
-    print(f"RX: {rx}, RY: {ry}")
-
-    img = draw_ellipse(img, cx, cy, rx, ry, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
-    return None
-
-def parse_line(img, element):
-    # <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2" />
-    x1 = int(element.attrib.get("x1"))
-    y1 = int(element.attrib.get("y1"))
-    x2 = int(element.attrib.get("x2"))
-    y2 = int(element.attrib.get("y2"))
-
-    stroke, stroke_width = get_fill_lines(element)
-
-    print(f"Stroke color: {stroke}, Stroke width: {stroke_width}")
-
-    print(f"X1: {x1}, Y1: {y1}")
-    print(f"X2: {x2}, Y2: {y2}")
-
-    img = draw_line(img, x1, y1, x2, y2, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
-    return None
-    
-
-def parse_poly_line(img, element):
+def parse_poly_line(element):
+    data = get_attributes_data(element)
     # <polyline points="20,20 40,25 60,40 80,120 120,140 200,180"
-    points = element.attrib.get("points")
+    points = data.points
     coordinates = []
     for point in points.split(" "):
         x_str, y_str = point.split(",")
@@ -211,96 +117,111 @@ def parse_poly_line(img, element):
     print(f"Points: {points}")
     print(f"Coordinates: {coordinates}")
 
-    fill, stroke, stroke_width = get_fill_outline(element)
+    data.coordinates = coordinates
+    return data
 
-    print(f"Fill: {fill}, Stroke color: {stroke}, Stroke width: {stroke_width}")
 
-    img = draw_poly_line(img, coordinates, fill, stroke, stroke_width)
-    img.save(FILE_NAME.replace(".svg", ".png"), 'PNG')
+def parse_path(element, draw_obj):
+    path_data = element.attrib.get("d")
+    data_items = path_data.split(" ")
+    initial_x, cursor_x = 0, 0
+    initial_y, cursor_y = 0, 0
+    while data_items:
+        item = data_items.pop(0).upper()
+        print(f"Item: {item}")
+        print(f"Init_x: {initial_x}, Init_y: {initial_y}")
+        print(f"Cur_x: {cursor_x}, Cur_y: {cursor_y}")
+        if len(item) > 1:
+            # M150
+            if "M" in item:
+                # Move to
+                initial_x = int(item.strip("M"))
+                initial_y = int(data_items.pop(0))
+                # #
+                # initial_x = cursor_x
+                # initial_y = cursor_y
+            elif "L" in item:
+                cursor_x = int(item.strip("L"))
+                cursor_y = int(data_items.pop(0))
+                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
+            elif "Z" in item:
+                # Close Path, draw line to initial point
+                draw_obj = draw_line(cursor_x, cursor_y, initial_x, initial_y, draw_obj)
+        #
+        else:
+            # M150
+            if "M" == item:
+                # Move to
+                initial_x = int(data_items.pop(0))
+                initial_y = int(data_items.pop(0))
+                # #
+                # initial_x = cursor_x
+                # initial_y = cursor_y
+            elif "L" == item:
+                cursor_x = int(data_items.pop(0))
+                cursor_y = int(data_items.pop(0))
+                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
+            elif "Z" == item:
+                # Close Path, draw line to initial point
+                draw_obj = draw_line(initial_x, initial_y, cursor_x, cursor_y, draw_obj)
+                # draw_obj = draw_line(cursor_x, cursor_y, initial_x, initial_y, draw_obj)
+
+    print(f"Path Data: {path_data}")
+    # draw_obj = draw_ellipse(cx, cy, rx, ry, draw_obj)
+    # img.save(FILE_NAME.replace(".svg", ".png"))
+    return draw_obj
+
+
+def detect_elm(svg_tree):
+    svg_elm = svg_tree.xpath("//svg")[0]
+    img_width, img_height = 1920, 1080
+    if svg_elm.attrib.get("width"):
+        img_width = int(svg_elm.attrib.get("width"))
+    #
+    if svg_elm.attrib.get("height"):
+        img_height = int(svg_elm.attrib.get("height"))
+    #
+    print(f"Image Width: {img_width} & Image Height: {img_height}")
+    picasso_obj = Picasso(img_width, img_height)
+    #
+    svg_elements = svg_tree.getchildren()
+    for element in svg_elements:
+        if element.tag == "rect":
+            print("Element is a rectangle!")
+            data = parse_rectangle(element)
+            picasso_obj.draw_quadrilateral(data)
+        #
+        elif element.tag == "circle":
+            print("Element is a circle!")
+            data = parse_circle(element)
+            picasso_obj.draw_closed_curve(data)
+        #
+        elif element.tag == "ellipse":
+            data = parse_ellipse(element)
+            picasso_obj.draw_closed_curve(data)
+        #
+        elif element.tag == "line":
+            print("Element is a line!")
+            data = parse_line(element)
+            picasso_obj.draw_line(data)
+        #
+        elif element.tag == "polyline":
+            print("Element is a polyline!")
+            data = parse_poly_line(element)
+            picasso_obj.draw_poly_line(data)
+        #
+        elif element.tag == "path":
+            print("Element is a path!")
+            draw_obj = parse_path(element)
+        #
+        else:
+            print("Unknown element, not able to parse!")
+    #
+    picasso_obj.img_obj.show()
+    picasso_obj.img_obj.save(FILE_NAME.replace(".svg", ".png"))
     return None
 
-def detect_elm(img, element_tree):
-    rect_element = element_tree.xpath("//rect")
-    cir_element = element_tree.xpath("//circle")
-    el_element = element_tree.xpath("//ellipse")
-    ln_element = element_tree.xpath("//line")
-    pol_ln_element = element_tree.xpath("//polyline")
-    path_element = element_tree.xpath("//path")
-    #
-    if rect_element:
-        print("Element is a rectangle!")
-        parse_rectangle(img, rect_element[0])
-        return rect_element[0]
-    #
-    elif cir_element:
-        print("Element is a circle!")
-        parse_circle(img, cir_element[0])
-        return cir_element[0]
-    #
-    elif el_element:
-        print("Element is a ellipse!")
-        parse_ellipse(img, el_element[0])
-        return el_element[0]
-    #
-    elif ln_element:
-        print("Element is a line!")
-        parse_line(img, ln_element[0])
-        return ln_element[0]
-    #
-    elif pol_ln_element:
-        print("Element is a polyline!")
-        parse_poly_line(img, pol_ln_element[0])
-        return pol_ln_element[0]
-    #
-    elif path_element:
-        print("Element is a path!")
-        parse_ellipse(img, path_element[0])
-        return path_element[0]
-    #
-    else:
-        print("Unknown element, not able to parse!")
-    return None
-        
-def parse_svg(svg_tree, element):
 
-    width = int(element.attrib.get("width"))
-    height = int(element.attrib.get("height"))
-
-    print(f"Width: {width}, Height: {height}")
-
-    if width and height:
-        img = Image.new("RGBA", (width, height), (255, 255, 255, 0))
-    else:
-        img = Image.new("RGBA", (IMAGE_WIDTH, IMAGE_HEIGHT), (255, 255, 255, 0))
-
-    # EFF THIS SHIT WHY THE HECK AIN T YOU WORKING I M TIRED FML... MOST LIKELY SOME STUPID CRAP BUT WELL
-    for child in svg_tree:
-        print(child.tag, child.attrib)
-        detect_elm(img, child)
-    return None
-
-# GIVEN_FILE = input('Enter the name of the SVG file that you want to parse: ')
-GIVEN_FILE = sys.argv[1]
-
-svg_xml = open_svg(GIVEN_FILE)
+svg_xml = open_svg(FILE_NAME)
 svg_tree = lxml.html.fromstring(svg_xml)
-svg_element = svg_tree.xpath("//svg")
-if svg_element:
-    print("Found SVG tag!")
-    parse_svg(svg_tree, svg_element[0])
-
-# Move turtle to specific coordinates (x,y)
-# Assuming top left as (0,0)
-# def goto_coord(x, y, ttle):
-#     ttle.penup()
-#     ttle.goto(x - ttle.screen.window_width()/2, ttle.screen.window_height()/2 - y)
-#     ttle.pendown()
-#     return None
-
-# ttle = turtle.Turtle()
-# goto_coord(rect_x, rect_y, ttle)
-# rect_or_square(width=rect_width, height=rect_height, ttle=ttle)
-
-# class Draw(object):
-#     def __init__(self):
-#         return NOne
+detect_elm(svg_tree)
