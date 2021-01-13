@@ -212,7 +212,8 @@ def parse_path(element):
 
     data = get_attributes_data(element)
     coordinates = []
-    coordinates_bezier = []
+    coordinates_bezier_control_points = []
+    coordinates_bezier_end_points = []
 
 
     path_data = element.attrib.get("d")
@@ -255,11 +256,11 @@ def parse_path(element):
                 cY1 = int(data_items.pop(0))
                 cX2 = int(data_items.pop(0))
                 cY2 = int(data_items.pop(0))
-                cX3 = int(data_items.pop(0))
-                cY3 = int(data_items.pop(0))
-                coordinates_bezier.append((cX1, cY1))
-                coordinates_bezier.append((cX2, cY2))
-                coordinates_bezier.append((cX3, cY3))
+                eX3 = int(data_items.pop(0))
+                eY3 = int(data_items.pop(0))
+                coordinates_bezier_control_points.append((cX1, cY1))
+                coordinates_bezier_control_points.append((cX2, cY2))
+                coordinates_bezier_end_points.append((eX3, eY3))
 
             elif "Z" in item:
                 # closing Path, drawing line to initial point
@@ -288,11 +289,11 @@ def parse_path(element):
                 cY1 = int(data_items.pop(0))
                 cX2 = int(data_items.pop(0))
                 cY2 = int(data_items.pop(0))
-                cX3 = int(data_items.pop(0))
-                cY3 = int(data_items.pop(0))
-                coordinates_bezier.append((cX1, cY1))
-                coordinates_bezier.append((cX2, cY2))
-                coordinates_bezier.append((cX3, cY3))
+                eX3 = int(data_items.pop(0))
+                eY3 = int(data_items.pop(0))
+                coordinates_bezier_control_points.append((cX1, cY1))
+                coordinates_bezier_control_points.append((cX2, cY2))
+                coordinates_bezier_end_points.append((eX3, eY3))
 
             elif "V" in item:
                 cursor_x = 0
@@ -305,11 +306,15 @@ def parse_path(element):
 
     print(f"Path Data: {path_data}")
     print(coordinates)
-    print(f"C coords:")
-    print(coordinates_bezier)
+    print(f"C control points coords for :")
+    print(coordinates_bezier_control_points)
+
+    print(f"C control end coords for :")
+    print(coordinates_bezier_end_points)
 
     data.coordinates = coordinates
-    data.coordinates_bezier = coordinates_bezier
+    data.coordinates_bezier_control_points = coordinates_bezier_control_points
+    data.coordinates_bezier_end_points = coordinates_bezier_end_points
     return data
 
 

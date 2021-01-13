@@ -142,14 +142,18 @@ class Picasso(object):
 
     def draw_path(self, data):
         coordinates = data.coordinates
-        coordinates_bezier = data.coordinates_bezier
+        coordinates_bezier_control_points = data.coordinates_bezier_control_points
+        coordinates_bezier_end_points = data.coordinates_bezier_end_points
         ts = [t / 100.0 for t in range(101)]
 
         points = coordinates
-
-        xys = coordinates_bezier
+        bezier_points = coordinates_bezier_control_points
+        bezier_points.extend(coordinates_bezier_end_points)
+        xys = bezier_points
         bezier = make_bezier(xys)
         points.extend(bezier(ts))
+
+
 
         # xys = [(50, 100), (80, 80), (100, 50)]
         # bezier = make_bezier(xys)
