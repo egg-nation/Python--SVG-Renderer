@@ -146,7 +146,8 @@ class Picasso(object):
         coordinates_bezier_end_points = data.coordinates_bezier_end_points
         ts = [t / 100.0 for t in range(101)]
 
-        points = coordinates
+        points = []
+        #points = coordinates
         bezier_points = coordinates_bezier_control_points
         bezier_points.extend(coordinates_bezier_end_points)
         xys = bezier_points
@@ -158,11 +159,11 @@ class Picasso(object):
         # xys = [(50, 100), (80, 80), (100, 50)]
         # bezier = make_bezier(xys)
         # points = bezier(ts)
-        #
+        #u
         # xys = [(100, 50), (100, 0), (50, 0), (50, 35)]
         # bezier = make_bezier(xys)
         # points.extend(bezier(ts))
-        #
+        # c
         # xys = [(50, 35), (50, 0), (0, 0), (0, 50)]
         # bezier = make_bezier(xys)
         # points.extend(bezier(ts))
