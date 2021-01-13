@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 import box
 from aggdraw import Draw, Path
 
-
+#stackoverflow
 def make_bezier(xys):
     '''
         Returns
@@ -31,7 +31,7 @@ def make_bezier(xys):
 
     return bezier
 
-
+#stackoverflow
 def pascal_row(n, memo={}):
     # This returns the nth row of Pascal's Triangle
     if n in memo:
