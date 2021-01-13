@@ -201,7 +201,6 @@ def parse_poly_line(element):
     data.coordinates = coordinates
     return data
 
-
 def parse_path(element):
     '''
         Gets SOME of the attributes needed (from the attribute d it gets M, L etc and finds the needed data values for each) to draw a path,
@@ -213,6 +212,8 @@ def parse_path(element):
 
     data = get_attributes_data(element)
     coordinates = []
+    coordinates_bezier = []
+
 
     path_data = element.attrib.get("d")
     data_items = path_data.split(" ")
@@ -238,6 +239,28 @@ def parse_path(element):
                 cursor_y = int(data_items.pop(0))
                 coordinates.append((cursor_x, cursor_y))
 
+            elif "H" in item:
+                cursor_x = int(item.strip("H"))
+                cursor_y = 0
+                coordinates.append((cursor_x, cursor_y))
+
+            elif "V" in item:
+                cursor_x = 0
+                cursor_y = int(item.strip("V"))
+                coordinates.append((cursor_x, cursor_y))
+
+            elif "C" in item:
+                # Curve
+                cX1 = int(item.strip("C"))
+                cY1 = int(data_items.pop(0))
+                cX2 = int(data_items.pop(0))
+                cY2 = int(data_items.pop(0))
+                cX3 = int(data_items.pop(0))
+                cY3 = int(data_items.pop(0))
+                coordinates_bezier.append((cX1, cY1))
+                coordinates_bezier.append((cX2, cY2))
+                coordinates_bezier.append((cX3, cY3))
+
             elif "Z" in item:
                 # closing Path, drawing line to initial point
                 coordinates.append((initial_x, initial_y))
@@ -254,14 +277,39 @@ def parse_path(element):
                 cursor_y = int(data_items.pop(0))
                 coordinates.append((cursor_x, cursor_y))
 
+            elif "H" in item:
+                cursor_x = int(data_items.pop(0))
+                cursor_y = 0
+                coordinates.append((cursor_x, cursor_y))
+
+            elif "C" in item:
+                # Curve
+                cX1 = int(data_items.pop(0))
+                cY1 = int(data_items.pop(0))
+                cX2 = int(data_items.pop(0))
+                cY2 = int(data_items.pop(0))
+                cX3 = int(data_items.pop(0))
+                cY3 = int(data_items.pop(0))
+                coordinates_bezier.append((cX1, cY1))
+                coordinates_bezier.append((cX2, cY2))
+                coordinates_bezier.append((cX3, cY3))
+
+            elif "V" in item:
+                cursor_x = 0
+                cursor_y = int(data_items.pop(0))
+                coordinates.append((cursor_x, cursor_y))
+
             elif "Z" == item:
                 # closing Path, drawing line to initial point
                 coordinates.append((initial_x, initial_y))
 
     print(f"Path Data: {path_data}")
     print(coordinates)
+    print(f"C coords:")
+    print(coordinates_bezier)
 
     data.coordinates = coordinates
+    data.coordinates_bezier = coordinates_bezier
     return data
 
 
@@ -320,7 +368,7 @@ def detect_elm(svg_tree):
         elif element.tag == "path":
             print("Element is a path!")
             data = parse_path(element)
-            picasso_obj.draw_poly_line(data)
+            picasso_obj.draw_path(data)
 
         else:
             print("Unknown element, not able to parse!")

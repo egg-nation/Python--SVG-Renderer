@@ -3,6 +3,54 @@
 
 from PIL import Image, ImageDraw
 import box
+from aggdraw import Draw, Path
+
+
+def make_bezier(xys):
+    '''
+        Returns
+        http://en.wikipedia.org/wiki/B%C3%A9zier_curve#Generalization
+
+        :xys: sequence of Bezier control points given as 2-tuples
+    '''
+    # xys should be a sequence of 2-tuples (Bezier control points)
+    n = len(xys)
+    combinations = pascal_row(n - 1)
+
+    def bezier(ts):
+        # This uses the generalized formula for bezier curves
+        # http://en.wikipedia.org/wiki/B%C3%A9zier_curve#Generalization
+        result = []
+        for t in ts:
+            tpowers = (t ** i for i in range(n))
+            upowers = reversed([(1 - t) ** i for i in range(n)])
+            coefs = [c * a * b for c, a, b in zip(combinations, tpowers, upowers)]
+            result.append(
+                tuple(sum([coef * p for coef, p in zip(coefs, ps)]) for ps in zip(*xys)))
+        return result
+
+    return bezier
+
+
+def pascal_row(n, memo={}):
+    # This returns the nth row of Pascal's Triangle
+    if n in memo:
+        return memo[n]
+    result = [1]
+    x, numerator = 1, n
+    for denominator in range(1, n // 2 + 1):
+        # print(numerator,denominator,x)
+        x *= numerator
+        x /= denominator
+        result.append(x)
+        numerator -= 1
+    if n & 1 == 0:
+        # n is even
+        result.extend(reversed(result[:-1]))
+    else:
+        result.extend(reversed(result))
+    memo[n] = result
+    return result
 
 class Picasso(object):
     def __init__(self, img_width, img_height):
@@ -90,4 +138,35 @@ class Picasso(object):
             if i + 1 != len(coordinates):
                 ln_data.x2, ln_data.y2 = coordinates[i + 1]
                 self.draw_line(ln_data)
+        return None
+
+    def draw_path(self, data):
+        coordinates = data.coordinates
+        coordinates_bezier = data.coordinates_bezier
+        ts = [t / 100.0 for t in range(101)]
+
+        points = coordinates
+
+        xys = coordinates_bezier
+        bezier = make_bezier(xys)
+        points.extend(bezier(ts))
+
+        # xys = [(50, 100), (80, 80), (100, 50)]
+        # bezier = make_bezier(xys)
+        # points = bezier(ts)
+        #
+        # xys = [(100, 50), (100, 0), (50, 0), (50, 35)]
+        # bezier = make_bezier(xys)
+        # points.extend(bezier(ts))
+        #
+        # xys = [(50, 35), (50, 0), (0, 0), (0, 50)]
+        # bezier = make_bezier(xys)
+        # points.extend(bezier(ts))
+        #
+        # xys = [(0, 50), (20, 80), (50, 100)]
+        # bezier = make_bezier(xys)
+        # points.extend(bezier(ts))
+        # #points.extend(coordinates)
+
+        self.draw_obj.polygon(points,  fill=data.fill, outline=data.stroke)
         return None
