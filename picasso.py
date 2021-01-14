@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 import box
 from aggdraw import Draw, Path
 
-#stackoverflow
+#stackoverflow https://stackoverflow.com/questions/246525/how-can-i-draw-a-bezier-curve-using-pythons-pil
 def make_bezier(xys):
     '''
         Returns
